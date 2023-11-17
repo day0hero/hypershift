@@ -3,11 +3,12 @@ global:
   useExternalSecrets: true
   s3:
     createBucket: true
-    region: 
-    bucketName: 
-    additionalTags: 
+    region: us-west-1
+    bucketName: jr-hcp-demo
+    additionalTags:
+      owner: jrickard
   
   buildconfig:
     git:
-      uri: 
-      ref:
+      uri: https://github.com/day0hero/hypershift
+      ref: main
