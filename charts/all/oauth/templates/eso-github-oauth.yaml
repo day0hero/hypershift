@@ -1,4 +1,5 @@
 ---
+{{- if .Values.global.oauth.enabled }}
 apiVersion: "external-secrets.io/v1beta1"
 kind: ExternalSecret
 metadata:
@@ -25,3 +26,4 @@ spec:
       data:
         clientSecret: |-
           {{ "{{ .clientSecret | trim }}" }}
+{{- end }}
