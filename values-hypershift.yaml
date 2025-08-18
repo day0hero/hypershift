@@ -25,9 +25,9 @@ global:
     type: GitHub
     secretName: ocp-github-oauth
     github:
-      clientID: #clientID of the registered GitHub oAuth Application
+      clientID: a2f32e0b1d39c9b6098b
       orgs:
-      - name: #list of github authorized organizations
+      - name: validatedpatterns
 
 # Set rbac.create to false if you want to skip creation of role/rolebinding.
 rbac:
