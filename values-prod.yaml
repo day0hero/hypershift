@@ -48,6 +48,13 @@ clusterGroup:
       project: hub
       path: charts/all/oauth
 
+    kubelet-config:
+      disabled: false
+      name: kubelet-config
+      namespace: openshift-machine-config-operator
+      project: hub
+      path: charts/all/kubelet-config
+
   imperative:
     # NOTE: We *must* use lists and not hashes. As hashes lose ordering once parsed by helm
     # The default schedule is every 10 minutes: imperative.schedule

@@ -1,0 +1,7 @@
+# KubeletConfig settings
+kubelet:
+  maxPods: 500
+  # MachineConfigPool label selector — controls which nodes get the config
+  machineConfigPoolSelector:
+    matchLabels:
+      pools.operator.machineconfiguration.openshift.io/worker: ""

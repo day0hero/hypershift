@@ -1,0 +1,12 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: KubeletConfig
+metadata:
+  name: set-max-pods
+spec:
+  machineConfigPoolSelector:
+    matchLabels:
+{{- range $key, $value := .Values.kubelet.machineConfigPoolSelector.matchLabels }}
+      {{ $key }}: {{ $value | quote }}
+{{- end }}
+  kubeletConfig:
+    maxPods: {{ .Values.kubelet.maxPods }}
