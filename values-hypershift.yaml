@@ -5,17 +5,19 @@ global:
     createBucket: true
     oidc:
 # OIDC bucket information: provide region and bucketName
-      region: ''
-      bucketName: ''
+      region: "us-east-2"
+      bucketName: "vphcp-state"
 
 # GitHub organization(s) — shared by oauth and group-sync
   github:
     orgs:
-    - name: 'github-org-name'
+    - name: validatedpatterns
       # Teams: Group Sync uses them for OpenShift groups. OAuth uses org/team slugs
       # for login when this list is non-empty; otherwise OAuth allows the whole org.
-      # Team names are case-sensitive and must match GitHub exactly, including hyphens. For example: Engineering, not engineering
-      teams: []
+      teams:
+      - Engineering
+      - qe
+      - Docs
 
 # register a GitHub oAuth application: https://github.com/settings/applications/new
 # configure oauth provider: https://docs.openshift.com/container-platform/4.15/authentication/understanding-identity-provider.html
@@ -25,7 +27,7 @@ global:
     type: GitHub
     secretName: ocp-github-oauth
     github:
-      clientID: 'github-app-client-id'
+      clientID: 'Ov23li2m43dEWnzCxKZF'
 
 # Group Sync Operator — syncs GitHub teams to OpenShift groups.
 # Vault secret githubGroupSync: `appId` = GitHub App ID (settings/apps → About), not installation ID;
@@ -76,6 +78,8 @@ autoscaling:
 rbac:
   create: false
 # Provide a list of users and/or groups to add to the clusterrolebinding
-# Group and user names must match GitHub exactly, including hyphens. For example: Engineering, not engineering
   users: []
-  groups: []
+  groups:
+  - Engineering
+  - qe
+  - Docs
