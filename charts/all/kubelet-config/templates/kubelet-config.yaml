@@ -5,8 +5,6 @@ metadata:
 spec:
   machineConfigPoolSelector:
     matchLabels:
-{{- range $key, $value := .Values.kubelet.machineConfigPoolSelector.matchLabels }}
-      {{ $key }}: {{ $value | quote }}
-{{- end }}
+      pools.operator.machineconfiguration.openshift.io/{{ .Values.kubelet.targetPool }}: ""
   kubeletConfig:
     maxPods: {{ .Values.kubelet.maxPods }}
