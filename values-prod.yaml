@@ -63,7 +63,7 @@ clusterGroup:
       path: charts/all/groupsync
 
     kubelet-config:
-      disabled: false
+      disabled: true
       name: kubelet-config
       namespace: openshift-machine-config-operator
       project: hub
