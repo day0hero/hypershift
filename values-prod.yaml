@@ -3,11 +3,10 @@ clusterGroup:
   isHubCluster: true
   sharedValueFiles:
     - /values-hypershift.yaml
-    - '/overrides/values-{{ $.Values.global.clusterPlatform }}.yaml'
-    - '/overrides/values-{{ $.Values.global.clusterVersion }}-{{ $.Values.clusterGroup.name }}.yaml'
 
   namespaces:
     - vault
+    - golang-external-secrets
     - multicluster-engine
     - group-sync-operator
 
@@ -35,6 +34,13 @@ clusterGroup:
       chart: hashicorp-vault
       chartVersion: 0.1.*
 
+    golang-external-secrets:
+      name: golang-external-secrets
+      namespace: golang-external-secrets
+      project: hub
+      chart: golang-external-secrets
+      chartVersion: 0.1.*
+
     hypershift:
       disabled: false
       name: hypershift
@@ -55,18 +61,6 @@ clusterGroup:
       namespace: group-sync-operator
       project: hub
       path: charts/all/groupsync
-
-    kubelet-config:
-      disabled: false
-      name: kubelet-config
-      namespace: openshift-machine-config-operator
-      project: hub
-      path: charts/all/kubelet-config
-      ignoreDifferences:
-        - group: machineconfiguration.openshift.io
-          kind: KubeletConfig
-          jqPathExpressions:
-            - .metadata.annotations
 
   imperative:
     # NOTE: We *must* use lists and not hashes. As hashes lose ordering once parsed by helm
