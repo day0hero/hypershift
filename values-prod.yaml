@@ -62,6 +62,10 @@ clusterGroup:
       namespace: openshift-machine-config-operator
       project: hub
       path: charts/all/kubelet-config
+      # Apply after other hub Applications (default sync-wave 0). KubeletConfig triggers
+      # MCO rollouts that can disrupt pods (e.g. Vault) if they run concurrently.
+      annotations:
+        argocd.argoproj.io/sync-wave: "100"
       ignoreDifferences:
         - group: machineconfiguration.openshift.io
           kind: KubeletConfig
