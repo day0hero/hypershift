@@ -10,8 +10,19 @@ clusterGroup:
     vault:
     multicluster-engine:
     group-sync-operator:
+    golang-external-secrets:
+      disabled: true
+    external-secrets-operator:
+      operatorGroup: true
+      targetNamespaces: []
+    external-secrets:
 
   subscriptions:
+    eso:
+      name: openshift-external-secrets-operator
+      namespace: external-secrets-operator
+      channel: stable-v1
+
     mce:
       name: multicluster-engine
       namespace: multicluster-engine
@@ -34,6 +45,15 @@ clusterGroup:
       project: hub
       chart: hashicorp-vault
       chartVersion: 0.1.*
+
+    golang-external-secrets:
+      disabled: true
+    openshift-external-secrets:
+      name: openshift-external-secrets
+      namespace: external-secrets
+      argoProject: hub
+      chart: openshift-external-secrets
+      chartVersion: 0.0.*
 
     hypershift:
       disabled: false
