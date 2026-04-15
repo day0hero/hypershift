@@ -41,7 +41,7 @@ global:
 # KubeletConfig (charts/all/kubelet-config). Compact 3-node hub: all nodes are on the master
 # MachineConfigPool; the worker pool is empty, so targetPool must be master.
 kubelet:
-  targetPool: master
+  targetPool: worker
 
 # Cluster Autoscaling Configuration
 # Enable autoscaling to automatically adjust cluster size based on workload demands
