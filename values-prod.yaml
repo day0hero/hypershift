@@ -7,9 +7,9 @@ clusterGroup:
     - '/overrides/values-{{ $.Values.global.clusterVersion }}-{{ $.Values.clusterGroup.name }}.yaml'
 
   namespaces:
-    - vault
-    - multicluster-engine
-    - group-sync-operator
+    vault:
+    multicluster-engine:
+    group-sync-operator:
 
   subscriptions:
     mce:
@@ -23,7 +23,7 @@ clusterGroup:
       source: community-operators
       channel: alpha
 
-  projects:
+  argoProjects:
     - hub
     - hypershift
 
@@ -39,28 +39,28 @@ clusterGroup:
       disabled: false
       name: hypershift
       namespace: multicluster-engine
-      project: hypershift
+      argoProject: hypershift
       path: charts/all/hypershift
 
     oauth:
       disabled: false
       name: oauth
       namespace: openshift-config
-      project: hub
+      argoProject: hub
       path: charts/all/oauth
 
     groupsync:
       disabled: false
       name: groupsync
       namespace: group-sync-operator
-      project: hub
+      argoProject: hub
       path: charts/all/groupsync
 
     kubelet-config:
       disabled: false
       name: kubelet-config
       namespace: openshift-machine-config-operator
-      project: hub
+      argoProject: hub
       path: charts/all/kubelet-config
       # Apply after other hub Applications (default sync-wave 0). KubeletConfig triggers
       # MCO rollouts that can disrupt pods (e.g. Vault) if they run concurrently.
