@@ -68,6 +68,11 @@ clusterGroup:
       namespace: openshift-machine-config-operator
       project: hub
       path: charts/all/kubelet-config
+      ignoreDifferences:
+        - group: machineconfiguration.openshift.io
+          kind: KubeletConfig
+          jqPathExpressions:
+            - .metadata.annotations
 
   imperative:
     # NOTE: We *must* use lists and not hashes. As hashes lose ordering once parsed by helm
