@@ -1,5 +1,5 @@
 apiVersion: v2
-name: legion-credentials
+name: pattern-credentials
 description: External Secrets for provisioning credentials (AWS, pull secret, HyperShift IAM)
 type: application
 version: 0.1.0
