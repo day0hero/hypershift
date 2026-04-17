@@ -1,0 +1,28 @@
+{{- if and .Values.global.hypershift.oidc.region .Values.global.hypershift.oidc.bucketName }}
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: hypershift-eso-oidc
+  namespace: local-cluster
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  refreshInterval: 5m
+  secretStoreRef:
+    name: {{ .Values.secretStore.name }}
+    kind: {{ .Values.secretStore.kind }}
+  target:
+    name: hypershift-operator-oidc-provider-s3-credentials
+    template:
+      type: Opaque
+      data:
+        credentials: |
+          [default]
+          aws_access_key_id = {{ "{{ .aws_access_key_id }}" }}
+          aws_secret_access_key = {{ "{{ .aws_secret_access_key }}" }}
+        region: {{ .Values.global.hypershift.oidc.region }}
+        bucket: {{ .Values.global.hypershift.oidc.bucketName }}
+  dataFrom:
+  - extract:
+      key: {{ .Values.awsCreds.key }}
+{{- end }}
