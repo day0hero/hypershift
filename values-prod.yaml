@@ -58,7 +58,7 @@ clusterGroup:
       chartVersion: 0.0.*
     
     cert-manager:
-      disabled: true
+      disabled: false
       name: openshift-cert-manager
       namespace: cert-manager-operator
       argoProject: hub
