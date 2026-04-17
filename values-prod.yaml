@@ -74,6 +74,11 @@ clusterGroup:
       chartVersion: 0.0.*
       annotations:
         argocd.argoproj.io/sync-wave: "38"
+      ignoreDifferences:
+        - group: argoproj.io
+          kind: ArgoCD
+          jqPathExpressions:
+            - .metadata.annotations
     
     cert-manager:
       disabled: false
