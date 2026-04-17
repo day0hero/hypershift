@@ -64,13 +64,23 @@ clusterGroup:
       argoProject: hub
       chart: letsencrypt
       chartVersion: 0.1.*
+    
+    autoscaler:
+      disabled: false
+      name: cluster-autoscaler
+      namespace: openshift-machine-api
+      argoProject: hub
+      chart: cluster-autoscaler
+      chartVersion: 0.0.*
 
     hypershift:
       disabled: false
       name: hypershift
       namespace: multicluster-engine
       argoProject: hypershift
-      path: charts/all/hypershift
+      chart: hypershift-config
+      chartVersion: 0.0.*
+#      path: charts/all/hypershift
 
     oauth:
       disabled: false
