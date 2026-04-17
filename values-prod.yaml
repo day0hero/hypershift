@@ -34,12 +34,6 @@ clusterGroup:
       namespace: group-sync-operator
       source: community-operators
       channel: alpha
-    
-    cert-manager:
-      name: openshift-cert-manager-operator
-      namespace: cert-manager-operator
-      source: redhat-operators
-      channel: stable-v1
 
   argoProjects:
     - hub
@@ -62,6 +56,14 @@ clusterGroup:
       argoProject: hub
       chart: openshift-external-secrets
       chartVersion: 0.0.*
+    
+    cert-manager:
+      disabled: true
+      name: openshift-cert-manager
+      namespace: cert-manager-operator
+      argoProject: hub
+      chart: letsencrypt
+      chartVersion: 0.1.*
 
     hypershift:
       disabled: false
@@ -99,13 +101,6 @@ clusterGroup:
           kind: KubeletConfig
           jqPathExpressions:
             - .metadata.annotations
-
-    cert-manager-config:
-      disabled: true
-      name: cert-manager-config
-      namespace: cert-manager
-      argoProject: infrastructure
-      path: charts/hub/cert-manager-config
       
   imperative:
     # NOTE: We *must* use lists and not hashes. As hashes lose ordering once parsed by helm
