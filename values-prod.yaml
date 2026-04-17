@@ -16,7 +16,8 @@ clusterGroup:
       operatorGroup: true
       targetNamespaces: []
     external-secrets:
-
+    cert-manager-operator:
+    
   subscriptions:
     eso:
       name: openshift-external-secrets-operator
@@ -33,6 +34,12 @@ clusterGroup:
       namespace: group-sync-operator
       source: community-operators
       channel: alpha
+    
+    cert-manager:
+      name: openshift-cert-manager-operator
+      namespace: cert-manager-operator
+      source: redhat-operators
+      channel: stable-v1
 
   argoProjects:
     - hub
@@ -48,6 +55,7 @@ clusterGroup:
 
     golang-external-secrets:
       disabled: true
+
     openshift-external-secrets:
       name: openshift-external-secrets
       namespace: external-secrets
@@ -92,6 +100,13 @@ clusterGroup:
           jqPathExpressions:
             - .metadata.annotations
 
+    cert-manager-config:
+      disabled: true
+      name: cert-manager-config
+      namespace: cert-manager
+      argoProject: infrastructure
+      path: charts/hub/cert-manager-config
+      
   imperative:
     # NOTE: We *must* use lists and not hashes. As hashes lose ordering once parsed by helm
     # The default schedule is every 10 minutes: imperative.schedule
