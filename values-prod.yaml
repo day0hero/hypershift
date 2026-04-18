@@ -51,6 +51,7 @@ clusterGroup:
   argoProjects:
     - hub
     - hypershift
+    - pipelines
 
   # Hub Applications: assign argocd.argoproj.io/sync-wave on every Argo Application so
   # ordering is explicit and kubelet-config stays in a terminal wave. Argo advances waves
@@ -113,7 +114,16 @@ clusterGroup:
       chartVersion: 0.0.*
       annotations:
         argocd.argoproj.io/sync-wave: "18"
-#      path: charts/all/hypershift
+
+    pipelines:
+      disabled: false
+      name: pipelines
+      namespace: openshift-pipelines
+      argoProject: pipelines
+      chart: cluster-pipelines
+      chartVersion: 0.0.*
+      annotations:
+        argocd.argoproj.io/sync-wave: "18"
 
     oauth:
       disabled: false
@@ -148,7 +158,7 @@ clusterGroup:
           kind: KubeletConfig
           jqPathExpressions:
             - .metadata.annotations
-      
+
   imperative:
     # NOTE: We *must* use lists and not hashes. As hashes lose ordering once parsed by helm
     # The default schedule is every 10 minutes: imperative.schedule
