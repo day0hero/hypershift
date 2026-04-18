@@ -16,7 +16,7 @@ clusterGroup:
       operatorGroup: true
       targetNamespaces: []
     external-secrets:
-    #cert-manager-operator:
+    openshift-pipelines:
     
   # Operator subscriptions default to sync wave 0. Give them an explicit early band so
   # CSVs exist before Applications that install CRs for those operators (Argo advances
@@ -35,6 +35,10 @@ clusterGroup:
       channel: stable-2.11
       annotations:
         argocd.argoproj.io/sync-wave: "5"
+
+    openshift-pipelines:
+      name: openshift-pipelines-operator-rh
+      channel: latest
 
     groupsync:
       name: group-sync-operator
