@@ -8,13 +8,13 @@ spec:
     name: deploy-hive-cluster
   params:
   - name: cluster-name
-    value: my-hive-cluster
+    value: test
   - name: base-domain
-    value: example.com
+    value: aws.validatedpatterns.io
   - name: cloud-provider
     value: aws
   - name: cloud-region
-    value: us-east-2
+    value: us-west-2
   - name: cluster-version
     value: img4.21.6-x86-64-appsub
   - name: control-plane-machine-type
