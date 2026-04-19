@@ -53,6 +53,7 @@ clusterGroup:
     - hub
     - hypershift
     - pipelines
+    - infrastructure
 
   # Hub Applications: assign argocd.argoproj.io/sync-wave on every Argo Application so
   # ordering is explicit and kubelet-config stays in a terminal wave. Argo advances waves
@@ -125,6 +126,14 @@ clusterGroup:
       chartVersion: 0.0.*
       annotations:
         argocd.argoproj.io/sync-wave: "18"
+
+    credentials:
+      name: pattern-credentials
+      namespace: cluster-provisioning
+      argoProject: infrastructure
+      path: charts/all/pattern-credentials
+      annotations:
+        argocd.argoproj.io/sync-wave: "50"
 
     oauth:
       disabled: false
