@@ -6,7 +6,9 @@ metadata:
   labels:
     {{- include "pipelines.labels" . | nindent 4 }}
 spec:
-  description: Waits for a HyperShift HostedCluster to become available and extracts credentials
+  description: >
+    Waits for HostedCluster Available, then for status.version.history[0].state=Completed
+    (payload rollout), then extracts kubeconfig.
   params:
   - name: cluster-name
     type: string
@@ -25,15 +27,21 @@ spec:
       CLUSTER_NAME=$(params.cluster-name)
       TIMEOUT=$(params.timeout-minutes)
       TIMEOUT_SECS=$((TIMEOUT * 60))
+      HC_NS={{ .Values.hypershift.hostedClusterNamespace | quote }}
 
-      echo "Waiting up to ${TIMEOUT}m for HostedCluster ${CLUSTER_NAME} to become available..."
-
+      echo "Waiting up to ${TIMEOUT}m for HostedCluster ${CLUSTER_NAME} (ns ${HC_NS}) to become Available..."
       oc wait hostedcluster/"${CLUSTER_NAME}" \
-        -n clusters \
+        -n "${HC_NS}" \
         --for=condition=Available=True \
         --timeout="${TIMEOUT_SECS}s"
 
-      echo "HostedCluster ${CLUSTER_NAME} is available"
+      echo "HostedCluster ${CLUSTER_NAME} is Available; waiting for version history rollout (state=Completed)..."
+      oc wait "hc/${CLUSTER_NAME}" \
+        -n "${HC_NS}" \
+        --for=jsonpath='{.status.version.history[0].state}'=Completed \
+        --timeout="${TIMEOUT_SECS}s"
+
+      echo "HostedCluster ${CLUSTER_NAME} version rollout Completed (history[0].state)"
 
       # Extract kubeconfig using hcp CLI or from secret
       KUBECONFIG_SECRET="${CLUSTER_NAME}-admin-kubeconfig"
@@ -44,14 +52,14 @@ spec:
         oc get secret "${KUBECONFIG_SECRET}" \
           -n "${NAMESPACE}" \
           -o jsonpath='{.data.kubeconfig}' | base64 -d > /workspace/kubeconfig/kubeconfig
-      elif oc get secret "${CLUSTER_NAME}-admin-kubeconfig" -n clusters &>/dev/null; then
-        echo "Extracting kubeconfig from clusters namespace"
+      elif oc get secret "${CLUSTER_NAME}-admin-kubeconfig" -n "${HC_NS}" &>/dev/null; then
+        echo "Extracting kubeconfig from ${HC_NS} namespace"
         oc get secret "${CLUSTER_NAME}-admin-kubeconfig" \
-          -n clusters \
+          -n "${HC_NS}" \
           -o jsonpath='{.data.kubeconfig}' | base64 -d > /workspace/kubeconfig/kubeconfig
       else
         echo "WARNING: Could not find kubeconfig secret, attempting hcp create kubeconfig"
-        hcp create kubeconfig --name "${CLUSTER_NAME}" --namespace clusters > /workspace/kubeconfig/kubeconfig || true
+        hcp create kubeconfig --name "${CLUSTER_NAME}" --namespace "${HC_NS}" > /workspace/kubeconfig/kubeconfig || true
       fi
 
       # Extract admin password
@@ -64,9 +72,9 @@ spec:
 
       # Print cluster info
       API_URL=$(oc get hostedcluster "${CLUSTER_NAME}" \
-        -n clusters \
+        -n "${HC_NS}" \
         -o jsonpath='{.status.controlPlaneEndpoint.host}' 2>/dev/null || echo "pending")
-      CONSOLE_URL="https://console-openshift-console.apps.${CLUSTER_NAME}.$(oc get hostedcluster ${CLUSTER_NAME} -n clusters -o jsonpath='{.spec.dns.baseDomain}' 2>/dev/null || echo 'unknown')"
+      CONSOLE_URL="https://console-openshift-console.apps.${CLUSTER_NAME}.$(oc get hostedcluster "${CLUSTER_NAME}" -n "${HC_NS}" -o jsonpath='{.spec.dns.baseDomain}' 2>/dev/null || echo 'unknown')"
 
       echo "============================================"
       echo "Cluster: ${CLUSTER_NAME}"

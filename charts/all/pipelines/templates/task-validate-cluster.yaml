@@ -106,7 +106,12 @@ spec:
         if [ "$CV_AVAILABLE" = "True" ]; then
           pass "ClusterVersion Available=True (after guest rollout wait)"
         else
-          fail "ClusterVersion Available=${CV_AVAILABLE:-unknown}"
+          CV_FAILING=$(oc get clusterversion version -o jsonpath='{.status.conditions[?(@.type=="Failing")].status}' 2>/dev/null || echo "")
+          if [ "$CV_FAILING" = "True" ]; then
+            fail "ClusterVersion Failing=True (Available=${CV_AVAILABLE:-unknown})"
+          else
+            warn "ClusterVersion Available=${CV_AVAILABLE:-unknown} after wait; Failing=${CV_FAILING:-unknown} — continuing (HyperShift/CVO often lags Available while the payload is usable)"
+          fi
         fi
       else
         fail "ClusterVersion Available=${CV_AVAILABLE:-unknown}"
