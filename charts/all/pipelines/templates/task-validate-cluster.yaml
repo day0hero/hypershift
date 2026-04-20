@@ -95,6 +95,19 @@ spec:
       CV_AVAILABLE=$(oc get clusterversion version -o jsonpath='{.status.conditions[?(@.type=="Available")].status}' 2>/dev/null || echo "")
       if [ "$CV_AVAILABLE" = "True" ]; then
         pass "ClusterVersion Available=True"
+      elif [ "$CLUSTER_TYPE" = "hypershift" ]; then
+        echo "  ClusterVersion not Available yet (common right after HostedCluster goes ready); waiting up to 10m..."
+        waited=0
+        while [ "$waited" -lt 600 ] && [ "$CV_AVAILABLE" != "True" ]; do
+          sleep 15
+          waited=$((waited + 15))
+          CV_AVAILABLE=$(oc get clusterversion version -o jsonpath='{.status.conditions[?(@.type=="Available")].status}' 2>/dev/null || echo "")
+        done
+        if [ "$CV_AVAILABLE" = "True" ]; then
+          pass "ClusterVersion Available=True (after guest rollout wait)"
+        else
+          fail "ClusterVersion Available=${CV_AVAILABLE:-unknown}"
+        fi
       else
         fail "ClusterVersion Available=${CV_AVAILABLE:-unknown}"
       fi
@@ -119,8 +132,13 @@ spec:
         done
       fi
 
-      TOTAL_NODES=$(oc get nodes --no-headers 2>/dev/null | wc -l)
-      READY_NODES=$(oc get nodes --no-headers 2>/dev/null | grep -c " Ready" || echo "0")
+      # Do not use: grep -c ... || echo "0" — when count is 0, grep exits 1 and both "0" lines are captured → arithmetic error.
+      TOTAL_NODES=0
+      READY_NODES=0
+      if [ -n "$(oc get nodes --no-headers 2>/dev/null)" ]; then
+        TOTAL_NODES=$(oc get nodes --no-headers 2>/dev/null | wc -l | tr -d ' ')
+        READY_NODES=$(oc get nodes --no-headers 2>/dev/null | awk 'index($2,"NotReady"){next} index($2,"Ready"){r++} END {print r+0}')
+      fi
       NOT_READY=$((TOTAL_NODES - READY_NODES))
 
       if [ "$TOTAL_NODES" -gt 0 ]; then
