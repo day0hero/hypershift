@@ -34,6 +34,8 @@ hypershift:
   defaultReplicas: 2
   defaultInstanceType: m5.xlarge
   baseDomain: ""
+  # Namespace of HostedCluster / NodePool CRs on the hub (OpenShift + HyperShift default).
+  hostedClusterNamespace: clusters
 
 hive:
   defaultControlPlaneReplicas: "3"

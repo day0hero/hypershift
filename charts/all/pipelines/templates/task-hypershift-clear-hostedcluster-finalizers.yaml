@@ -1,0 +1,92 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: hypershift-clear-hostedcluster-finalizers
+  namespace: {{ .Values.pipelineNamespace }}
+  labels:
+    {{- include "pipelines.labels" . | nindent 4 }}
+spec:
+  description: >
+    After hcp destroy, waits until NodePools and the hosted cluster data namespace are gone,
+    then clears HostedCluster metadata.finalizers if the HostedCluster is still stuck.
+  params:
+  - name: cluster-name
+    type: string
+  - name: timeout-minutes
+    type: string
+    default: "30"
+  - name: hosted-cluster-namespace
+    type: string
+    description: Namespace where the HostedCluster CR lives (hub default is clusters)
+    default: {{ .Values.hypershift.hostedClusterNamespace | quote }}
+  - name: cluster-data-namespace
+    type: string
+    description: Hub namespace removed during teardown; empty uses cluster-name
+    default: ""
+  steps:
+  - name: wait-and-clear-finalizers
+    image: {{ .Values.toolsImage | quote }}
+    script: |
+      #!/bin/bash
+      set -euo pipefail
+
+      NAME="$(params.cluster-name)"
+      HC_NS="$(params.hosted-cluster-namespace)"
+      DATA_NS="$(params.cluster-data-namespace)"
+      if [ -z "${DATA_NS}" ]; then
+        DATA_NS="${NAME}"
+      fi
+      TO=$(( $(params.timeout-minutes) * 60 ))
+      INTERVAL=15
+      elapsed=0
+
+      if ! oc get hostedcluster "${NAME}" -n "${HC_NS}" &>/dev/null; then
+        echo "No HostedCluster ${NAME} in ${HC_NS}; nothing to finalize."
+        exit 0
+      fi
+
+      echo "Waiting up to ${TO}s for NodePools (ns ${HC_NS}) and namespace ${DATA_NS} to be gone before clearing HostedCluster finalizers..."
+
+      while [ "${elapsed}" -lt "${TO}" ]; do
+        if ! oc get hostedcluster "${NAME}" -n "${HC_NS}" &>/dev/null; then
+          echo "HostedCluster ${NAME} already removed."
+          exit 0
+        fi
+
+        np_count=$(oc get nodepool -n "${HC_NS}" -l hypershift.openshift.io/cluster="${NAME}" --no-headers 2>/dev/null | wc -l | tr -d ' ')
+        np_count=${np_count:-0}
+        ns_gone=1
+        if oc get namespace "${DATA_NS}" &>/dev/null; then
+          ns_gone=0
+        fi
+
+        if [ "${np_count}" -eq 0 ] && [ "${ns_gone}" -eq 1 ]; then
+          echo "NodePools=0 and namespace ${DATA_NS} absent; clearing finalizers on HostedCluster/${NAME}."
+          if oc patch hostedcluster "${NAME}" -n "${HC_NS}" --type=merge -p '{"metadata":{"finalizers":[]}}' 2>/dev/null; then
+            echo "Patch (merge) cleared finalizers."
+          else
+            if ! oc patch hostedcluster "${NAME}" -n "${HC_NS}" --type=json -p='[{"op":"replace","path":"/metadata/finalizers","value":[]}]' 2>/dev/null; then
+              echo "ERROR: could not patch finalizers on HostedCluster ${NAME}" >&2
+              exit 1
+            fi
+            echo "Patch (json) cleared finalizers."
+          fi
+
+          sleep 5
+          if oc get hostedcluster "${NAME}" -n "${HC_NS}" &>/dev/null; then
+            echo "HostedCluster still present; issuing delete without blocking."
+            oc delete hostedcluster "${NAME}" -n "${HC_NS}" --ignore-not-found --wait=false || true
+          fi
+          exit 0
+        fi
+
+        echo "  ... nodepools=${np_count} namespace_${DATA_NS}_gone=${ns_gone} (${elapsed}s / ${TO}s)"
+        sleep "${INTERVAL}"
+        elapsed=$((elapsed + INTERVAL))
+      done
+
+      echo "Timeout: NodePools or namespace ${DATA_NS} still present after ${TO}s; refusing to strip finalizers early." >&2
+      oc get nodepool -n "${HC_NS}" -l hypershift.openshift.io/cluster="${NAME}" -o wide 2>/dev/null || true
+      oc get namespace "${DATA_NS}" -o yaml 2>/dev/null | head -40 || true
+      oc get hostedcluster "${NAME}" -n "${HC_NS}" -o yaml 2>/dev/null | head -60 || true
+      exit 1

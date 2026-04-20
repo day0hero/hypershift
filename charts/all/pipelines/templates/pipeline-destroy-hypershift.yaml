@@ -125,9 +125,24 @@ spec:
     - name: credentials
       workspace: credentials
 
-  - name: delete-managed-cluster
+  - name: clear-hostedcluster-finalizers
     runAfter:
     - destroy-hosted-cluster
+    taskRef:
+      name: hypershift-clear-hostedcluster-finalizers
+    params:
+    - name: cluster-name
+      value: $(params.cluster-name)
+    - name: timeout-minutes
+      value: $(params.timeout-minutes)
+    - name: hosted-cluster-namespace
+      value: {{ .Values.hypershift.hostedClusterNamespace | quote }}
+    - name: cluster-data-namespace
+      value: ""
+
+  - name: delete-managed-cluster
+    runAfter:
+    - clear-hostedcluster-finalizers
     taskSpec:
       params:
       - name: cluster-name
