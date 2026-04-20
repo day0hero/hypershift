@@ -3,8 +3,6 @@
 xrdDashboard:
   imageRegistry: image-registry.openshift-image-registry.svc:5000/xrd-dashboard
   imageTag: latest
-  # Namespaces where xrd-watch has list/watch via RoleBinding (must match watch-resources ConfigMap).
-  watchNamespaces:
-    - team-platform
-    - team-data
-    - team-app
+  # Namespaces where xrd-watch has list/watch via RoleBinding (must exist on the cluster).
+  # Add your team namespaces here; empty is valid (cluster-scoped watch only).
+  watchNamespaces: []

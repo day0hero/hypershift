@@ -20,6 +20,8 @@ data:
       namespaces:
 {{- range .Values.xrdDashboard.watchNamespaces }}
         - {{ . }}
+{{- else }}
+        []
 {{- end }}
       kinds:
         - group: platform.example.io
