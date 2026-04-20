@@ -154,6 +154,13 @@ clusterGroup:
       annotations:
         argocd.argoproj.io/sync-wave: "60"
 
+    hypershift-cli:
+      disabled: false
+      name: hcp-cli
+      namespace: cluster-provisioning
+      argoProject: infrastructure
+      path: charts/all/hcp-cli
+
     kubelet-config:
       disabled: false
       name: kubelet-config
