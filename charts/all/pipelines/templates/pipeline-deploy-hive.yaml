@@ -210,6 +210,7 @@ spec:
         - name: cluster-name
           value: $(params.cluster-name)
 
+    {{- if eq (include "pipelines.klusterletAddonEnabled" . | trim) "true" }}
     - name: create-klusterlet-addon
       runAfter:
         - create-import-secret
@@ -220,3 +221,4 @@ spec:
           value: $(params.cluster-name)
         - name: cluster-group
           value: $(params.cluster-group)
+    {{- end }}

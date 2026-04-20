@@ -18,7 +18,9 @@ clusterGroup:
     external-secrets:
     openshift-pipelines:
     cluster-provisioning:
-    
+    # When listed (and not disabled), charts/all/pipelines enables create-klusterlet-addon alongside acm app below.
+    # open-cluster-management:
+
   # Operator subscriptions default to sync wave 0. Give them an explicit early band so
   # CSVs exist before Applications that install CRs for those operators (Argo advances
   # waves only after prior-wave resources are Synced + Healthy where health applies).
@@ -127,6 +129,14 @@ clusterGroup:
       #chartVersion: 0.0.*
       annotations:
         argocd.argoproj.io/sync-wave: "18"
+
+    # Uncomment when ACM is installed — pipelines chart detects this key and enables Klusterlet add-on task.
+    # acm:
+    #   name: acm
+    #   namespace: open-cluster-management
+    #   argoProject: hub
+    #   chart: acm
+    #   chartVersion: 0.2.*
 
     credentials:
       name: pattern-credentials

@@ -1,5 +1,12 @@
 pipelineNamespace: cluster-provisioning
 
+# Hub pattern may pass clusterGroup (namespaces, applications) for conditional behavior.
+clusterGroup: {}
+
+# klusterletAddon.enabled: explicit true/false overrides auto-detection below.
+# When unset, create-klusterlet-addon runs only if clusterGroup lists ACM or the OCM namespace.
+klusterletAddon: {}
+
 serviceAccount:
   create: true
   name: provisioner

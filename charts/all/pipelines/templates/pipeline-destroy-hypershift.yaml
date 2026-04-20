@@ -141,6 +141,7 @@ spec:
           #!/bin/bash
           set -euo pipefail
 
+          ENABLE_KAC='{{ include "pipelines.klusterletAddonEnabled" . | trim }}'
           CLUSTER_NAME=$(params.cluster-name)
           TIMEOUT=$(params.timeout-minutes)
 
@@ -150,10 +151,12 @@ spec:
             --wait=true \
             --timeout="${TIMEOUT}m" || true
 
-          echo "Deleting KlusterletAddonConfig..."
-          oc delete klusterletaddonconfig "${CLUSTER_NAME}" \
-            -n "${CLUSTER_NAME}" \
-            --ignore-not-found || true
+          if [ "${ENABLE_KAC}" = "true" ]; then
+            echo "Deleting KlusterletAddonConfig..."
+            oc delete klusterletaddonconfig "${CLUSTER_NAME}" \
+              -n "${CLUSTER_NAME}" \
+              --ignore-not-found || true
+          fi
 
           echo "Cleanup complete"
     params:

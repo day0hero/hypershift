@@ -1,3 +1,4 @@
+{{- if eq (include "pipelines.klusterletAddonEnabled" . | trim) "true" }}
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
@@ -43,3 +44,4 @@ spec:
         iamPolicyController:
           enabled: true
       EOF
+{{- end }}

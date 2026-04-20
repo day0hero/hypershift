@@ -187,6 +187,7 @@ spec:
     - name: kubeconfig
       workspace: kubeconfig
 
+  {{- if eq (include "pipelines.klusterletAddonEnabled" . | trim) "true" }}
   - name: create-klusterlet-addon
     taskRef:
       name: create-klusterlet-addon
@@ -197,3 +198,4 @@ spec:
       value: $(params.cluster-name)
     - name: cluster-group
       value: $(params.cluster-group)
+  {{- end }}
