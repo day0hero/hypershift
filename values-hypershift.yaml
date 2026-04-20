@@ -106,3 +106,7 @@ letsencrypt:
   # staging URL
   # server: https://acme-staging-v02.api.letsencrypt.org/directory
    email: team-vp@ragtagrobot.com
+
+# XRD dashboard (charts/all/xrd-dashboard): use a unique cookie secret in production.
+# xrdDashboard:
+#   oauthSessionSecret: "<output of: openssl rand -base64 32>"

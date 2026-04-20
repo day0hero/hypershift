@@ -7,7 +7,9 @@ metadata:
     app: xrd-gateway
     app.kubernetes.io/component: gateway
 spec:
-  replicas: 2
+  replicas: {{ .Values.xrdDashboard.replicaCount }}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: xrd-gateway

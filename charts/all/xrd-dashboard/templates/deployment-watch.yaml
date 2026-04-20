@@ -6,7 +6,9 @@ metadata:
   labels:
     app: xrd-watch
 spec:
-  replicas: 2
+  replicas: {{ .Values.xrdDashboard.replicaCount }}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: xrd-watch

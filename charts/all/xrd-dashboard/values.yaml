@@ -3,6 +3,11 @@
 xrdDashboard:
   imageRegistry: image-registry.openshift-image-registry.svc:5000/xrd-dashboard
   imageTag: latest
+  replicaCount: 2
+  # oauth-proxy cookie signing secret — must be stable across Argo syncs (override in prod).
+  oauthSessionSecret: "dev-only-replace-with-openssl-rand-base64-32-in-values-overrides"
   # Namespaces where xrd-watch has list/watch via RoleBinding (must exist on the cluster).
-  # Add your team namespaces here; empty is valid (cluster-scoped watch only).
   watchNamespaces: []
+  hpa:
+    # CPU metrics API is often empty until monitoring/user workloads exist; disable to avoid HPA errors.
+    enabled: false

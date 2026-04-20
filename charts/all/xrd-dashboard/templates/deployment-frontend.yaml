@@ -7,7 +7,9 @@ metadata:
     app: xrd-frontend
     app.kubernetes.io/component: frontend
 spec:
-  replicas: 2
+  replicas: {{ .Values.xrdDashboard.replicaCount }}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: xrd-frontend
