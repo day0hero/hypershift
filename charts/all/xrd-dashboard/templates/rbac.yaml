@@ -1,0 +1,104 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: xrd-gateway
+  namespace: xrd-dashboard
+  annotations:
+    serviceaccounts.openshift.io/oauth-client: "true"
+    serviceaccounts.openshift.io/oauth-redirectreference.primary: >
+      {"kind":"OAuthRedirectReference","apiVersion":"v1",
+       "reference":{"kind":"Route","name":"xrd-dashboard"}}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: xrd-query
+  namespace: xrd-dashboard
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: xrd-watch
+  namespace: xrd-dashboard
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: xrd-dashboard-watch
+rules:
+  - apiGroups: ["apiextensions.crossplane.io"]
+    resources: ["compositeresourcedefinitions"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["pkg.crossplane.io"]
+    resources: ["providers", "providerrevisions"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: xrd-dashboard-watch-namespaced
+rules:
+  - apiGroups: ["platform.example.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["cert-manager.io"]
+    resources: ["certificates", "certificaterequests"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["gateway.networking.k8s.io"]
+    resources: ["gateways", "httproutes"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: xrd-dashboard-query
+rules:
+  - apiGroups: ["authentication.k8s.io"]
+    resources: ["tokenreviews"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: xrd-dashboard-watch
+subjects:
+  - kind: ServiceAccount
+    name: xrd-watch
+    namespace: xrd-dashboard
+roleRef:
+  kind: ClusterRole
+  name: xrd-dashboard-watch
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: xrd-dashboard-query
+subjects:
+  - kind: ServiceAccount
+    name: xrd-query
+    namespace: xrd-dashboard
+roleRef:
+  kind: ClusterRole
+  name: xrd-dashboard-query
+  apiGroup: rbac.authorization.k8s.io
+{{- range .Values.xrdDashboard.watchNamespaces }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: xrd-dashboard-watch
+  namespace: {{ . }}
+subjects:
+  - kind: ServiceAccount
+    name: xrd-watch
+    namespace: xrd-dashboard
+roleRef:
+  kind: ClusterRole
+  name: xrd-dashboard-watch-namespaced
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

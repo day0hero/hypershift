@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xrd-watch
+  namespace: xrd-dashboard
+  labels:
+    app: xrd-watch
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: xrd-watch
+  template:
+    metadata:
+      labels:
+        app: xrd-watch
+    spec:
+      serviceAccountName: xrd-watch
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: watch
+          image: {{ printf "%s/watch:%s" .Values.xrdDashboard.imageRegistry .Values.xrdDashboard.imageTag }}
+          ports:
+            - containerPort: 8083
+              name: http
+          env:
+            - name: LEADER_ELECTION_NS
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: WATCH_CONFIG_PATH
+              value: "/etc/xrd/resources.yaml"
+            - name: LOG_LEVEL
+              value: "info"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8083
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8083
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /etc/xrd
+              name: watch-config
+              readOnly: true
+            - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              name: kube-api-access
+              readOnly: true
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: watch-config
+          configMap:
+            name: xrd-watch-resources
+        - name: kube-api-access
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  expirationSeconds: 3600
+                  audience: "https://kubernetes.default.svc"
+              - configMap:
+                  name: kube-root-ca.crt
+                  items:
+                    - key: ca.crt
+                      path: ca.crt

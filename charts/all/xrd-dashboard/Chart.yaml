@@ -1,0 +1,9 @@
+apiVersion: v2
+name: xrd-dashboard
+description: >-
+  Crossplane resource dashboard (frontend, gateway, query, watch) for OpenShift.
+  Container images are expected in the internal registry under the xrd-dashboard namespace
+  (build with the Tekton pipeline in openshift_dashboard).
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

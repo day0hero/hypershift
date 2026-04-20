@@ -1,0 +1,30 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: xrd-dashboard
+  namespace: xrd-dashboard
+spec:
+  to:
+    kind: Service
+    name: xrd-gateway
+  port:
+    targetPort: oauth
+  tls:
+    termination: Reencrypt
+    insecureEdgeTerminationPolicy: Redirect
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: xrd-frontend
+  namespace: xrd-dashboard
+spec:
+  to:
+    kind: Service
+    name: xrd-frontend
+  port:
+    targetPort: http
+  tls:
+    termination: Edge
+    insecureEdgeTerminationPolicy: Redirect

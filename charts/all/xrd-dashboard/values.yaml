@@ -1,0 +1,10 @@
+# Images: push to image-registry.openshift-image-registry.svc:5000/xrd-dashboard/*
+# (see openshift_dashboard pipeline) before sync, or ImagePullBackOff is expected.
+xrdDashboard:
+  imageRegistry: image-registry.openshift-image-registry.svc:5000/xrd-dashboard
+  imageTag: latest
+  # Namespaces where xrd-watch has list/watch via RoleBinding (must match watch-resources ConfigMap).
+  watchNamespaces:
+    - team-platform
+    - team-data
+    - team-app

@@ -1,0 +1,130 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: xrd-dashboard
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway
+  namespace: xrd-dashboard
+spec:
+  podSelector:
+    matchLabels:
+      app: xrd-gateway
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-ingress
+    - from:
+        - podSelector:
+            matchLabels:
+              app: xrd-frontend
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: xrd-query
+      ports:
+        - port: 8082
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: xrd-watch
+      ports:
+        - port: 8083
+          protocol: TCP
+    - ports:
+        - port: 6443
+          protocol: TCP
+    - ports:
+        - port: 443
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend
+  namespace: xrd-dashboard
+spec:
+  podSelector:
+    matchLabels:
+      app: xrd-frontend
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-ingress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: xrd-gateway
+      ports:
+        - port: 8443
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-query
+  namespace: xrd-dashboard
+spec:
+  podSelector:
+    matchLabels:
+      app: xrd-query
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: xrd-gateway
+      ports:
+        - port: 8082
+          protocol: TCP
+  egress:
+    - ports:
+        - port: 6443
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-watch
+  namespace: xrd-dashboard
+spec:
+  podSelector:
+    matchLabels:
+      app: xrd-watch
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: xrd-gateway
+      ports:
+        - port: 8083
+          protocol: TCP
+  egress:
+    - ports:
+        - port: 6443
+          protocol: TCP

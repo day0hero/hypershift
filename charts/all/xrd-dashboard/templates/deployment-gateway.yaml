@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xrd-gateway
+  namespace: xrd-dashboard
+  labels:
+    app: xrd-gateway
+    app.kubernetes.io/component: gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: xrd-gateway
+  template:
+    metadata:
+      labels:
+        app: xrd-gateway
+        app.kubernetes.io/component: gateway
+    spec:
+      serviceAccountName: xrd-gateway
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: oauth-proxy
+          image: registry.redhat.io/openshift4/ose-oauth-proxy:latest
+          args:
+            - --https-address=:8443
+            - --provider=openshift
+            - --openshift-service-account=xrd-gateway
+            - --upstream=http://localhost:8081
+            - --tls-cert=/etc/tls/private/tls.crt
+            - --tls-key=/etc/tls/private/tls.key
+            - --cookie-secret-file=/etc/proxy/secrets/session-secret
+            - --openshift-delegate-urls={"/":{"resource":"services","verb":"get","namespace":"xrd-dashboard"}}
+            - --pass-access-token=true
+            - --skip-auth-regex=^/healthz
+          ports:
+            - containerPort: 8443
+              name: oauth
+          volumeMounts:
+            - mountPath: /etc/tls/private
+              name: proxy-tls
+            - mountPath: /etc/proxy/secrets
+              name: session-secret
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+
+        - name: gateway
+          image: {{ printf "%s/gateway:%s" .Values.xrdDashboard.imageRegistry .Values.xrdDashboard.imageTag }}
+          ports:
+            - containerPort: 8081
+              name: http
+          env:
+            - name: QUERY_SERVICE_URL
+              value: "http://xrd-query:8082"
+            - name: WATCH_SERVICE_URL
+              value: "http://xrd-watch:8083"
+            - name: LOG_LEVEL
+              value: "info"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+
+      volumes:
+        - name: proxy-tls
+          secret:
+            secretName: xrd-gateway-tls
+        - name: session-secret
+          secret:
+            secretName: xrd-gateway-session
+        - name: tmp
+          emptyDir: {}

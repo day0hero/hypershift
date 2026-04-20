@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: xrd-watch-resources
+  namespace: xrd-dashboard
+data:
+  resources.yaml: |
+    clusterScoped:
+      - group: apiextensions.crossplane.io
+        version: v1
+        kind: CompositeResourceDefinition
+      - group: pkg.crossplane.io
+        version: v1
+        kind: Provider
+      - group: pkg.crossplane.io
+        version: v1
+        kind: ProviderRevision
+
+    namespacedResources:
+      namespaces:
+{{- range .Values.xrdDashboard.watchNamespaces }}
+        - {{ . }}
+{{- end }}
+      kinds:
+        - group: platform.example.io
+          version: v1alpha1
+          kind: XDatabase
+        - group: platform.example.io
+          version: v1alpha1
+          kind: XNetwork
+        - group: platform.example.io
+          version: v1alpha1
+          kind: XCache
+        - group: cert-manager.io
+          version: v1
+          kind: Certificate
+        - group: gateway.networking.k8s.io
+          version: v1
+          kind: Gateway
