@@ -36,6 +36,7 @@ hypershift:
   baseDomain: ""
   # Namespace of HostedCluster / NodePool CRs on the hub (OpenShift + HyperShift default).
   hostedClusterNamespace: clusters
+  # destroy: finalizer task treats empty cluster-data-namespace as "cluster-<cluster-name>" on the hub.
 
 hive:
   defaultControlPlaneReplicas: "3"

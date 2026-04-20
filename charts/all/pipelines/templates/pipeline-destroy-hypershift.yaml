@@ -30,6 +30,10 @@ spec:
   - name: pullsecret-key-path
     type: string
     default: "pushsecrets/global-pull-secret"
+  - name: cluster-data-namespace
+    description: Hub namespace expected gone before stripping HC finalizers; empty => cluster-<cluster-name>
+    type: string
+    default: ""
   workspaces:
   - name: credentials
     description: Writable workspace for STS creds
@@ -125,24 +129,9 @@ spec:
     - name: credentials
       workspace: credentials
 
-  - name: clear-hostedcluster-finalizers
-    runAfter:
-    - destroy-hosted-cluster
-    taskRef:
-      name: hypershift-clear-hostedcluster-finalizers
-    params:
-    - name: cluster-name
-      value: $(params.cluster-name)
-    - name: timeout-minutes
-      value: $(params.timeout-minutes)
-    - name: hosted-cluster-namespace
-      value: {{ .Values.hypershift.hostedClusterNamespace | quote }}
-    - name: cluster-data-namespace
-      value: ""
-
   - name: delete-managed-cluster
     runAfter:
-    - clear-hostedcluster-finalizers
+    - destroy-hosted-cluster
     taskSpec:
       params:
       - name: cluster-name
@@ -179,3 +168,16 @@ spec:
       value: $(params.cluster-name)
     - name: timeout-minutes
       value: $(params.timeout-minutes)
+
+  - name: clear-hostedcluster-finalizers
+    runAfter:
+    - delete-managed-cluster
+    taskRef:
+      name: hypershift-clear-hostedcluster-finalizers
+    params:
+    - name: cluster-name
+      value: $(params.cluster-name)
+    - name: hosted-cluster-namespace
+      value: {{ .Values.hypershift.hostedClusterNamespace | quote }}
+    - name: cluster-data-namespace
+      value: $(params.cluster-data-namespace)
