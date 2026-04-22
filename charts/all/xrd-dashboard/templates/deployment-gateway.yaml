@@ -7,7 +7,9 @@ metadata:
     app: xrd-gateway
     app.kubernetes.io/component: gateway
 spec:
-  replicas: {{ .Values.xrdDashboard.replicaCount }}
+  replicas: {{ if .Values.xrdDashboard.workloadsSuspended }}0{{ else }}{{ .Values.xrdDashboard.replicaCount }}{{ end }}
+  progressDeadlineSeconds: 600
+  revisionHistoryLimit: 10
   strategy:
     type: Recreate
   selector:
@@ -23,13 +25,13 @@ spec:
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
-        hostUsers: false
         seccompProfile:
           type: RuntimeDefault
 
       containers:
         - name: oauth-proxy
           image: registry.redhat.io/openshift4/ose-oauth-proxy:latest
+          imagePullPolicy: Always
           args:
             - --https-address=:8443
             - --provider=openshift
@@ -44,6 +46,7 @@ spec:
           ports:
             - containerPort: 8443
               name: oauth
+              protocol: TCP
           volumeMounts:
             - mountPath: /etc/tls/private
               name: proxy-tls
@@ -64,9 +67,11 @@ spec:
 
         - name: gateway
           image: {{ printf "%s/gateway:%s" .Values.xrdDashboard.imageRegistry .Values.xrdDashboard.imageTag }}
+          imagePullPolicy: Always
           ports:
             - containerPort: 8081
               name: http
+              protocol: TCP
           env:
             - name: QUERY_SERVICE_URL
               value: "http://xrd-query:8082"
@@ -75,17 +80,25 @@ spec:
             - name: LOG_LEVEL
               value: "info"
           livenessProbe:
+            failureThreshold: 3
             httpGet:
               path: /healthz
               port: 8081
+              scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
           readinessProbe:
+            failureThreshold: 3
             httpGet:
               path: /readyz
               port: 8081
+              scheme: HTTP
             initialDelaySeconds: 3
             periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

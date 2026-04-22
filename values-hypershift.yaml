@@ -110,3 +110,5 @@ letsencrypt:
 # XRD dashboard (charts/all/xrd-dashboard): use a unique cookie secret in production.
 # xrdDashboard:
 #   oauthSessionSecret: "<output of: openssl rand -base64 32>"
+# Scale workloads to 0 until internal-registry images exist (Argo Healthy/Synced without pulls):
+#   workloadsSuspended: true

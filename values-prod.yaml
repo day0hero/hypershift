@@ -139,6 +139,19 @@ clusterGroup:
       path: charts/all/xrd-dashboard
       annotations:
         argocd.argoproj.io/sync-wave: "35"
+      ignoreDifferences:
+        - group: route.openshift.io
+          kind: Route
+          jqPathExpressions:
+            - .status
+            - .spec.host
+        - group: apps
+          kind: Deployment
+          jqPathExpressions:
+            - .spec.template.spec.containers[].securityContext.runAsUser
+            - .spec.template.spec.securityContext.runAsUser
+            - .spec.template.spec.securityContext.runAsGroup
+            - .spec.template.spec.securityContext.fsGroup
 
     # Uncomment when ACM is installed — pipelines chart detects this key and enables Klusterlet add-on task.
     # acm:

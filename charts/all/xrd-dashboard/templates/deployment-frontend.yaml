@@ -7,7 +7,9 @@ metadata:
     app: xrd-frontend
     app.kubernetes.io/component: frontend
 spec:
-  replicas: {{ .Values.xrdDashboard.replicaCount }}
+  replicas: {{ if .Values.xrdDashboard.workloadsSuspended }}0{{ else }}{{ .Values.xrdDashboard.replicaCount }}{{ end }}
+  progressDeadlineSeconds: 600
+  revisionHistoryLimit: 10
   strategy:
     type: Recreate
   selector:
@@ -22,27 +24,36 @@ spec:
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
-        hostUsers: false
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: frontend
           image: {{ printf "%s/frontend:%s" .Values.xrdDashboard.imageRegistry .Values.xrdDashboard.imageTag }}
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
               name: http
+              protocol: TCP
           livenessProbe:
+            failureThreshold: 3
             httpGet:
               path: /healthz
               port: 8080
+              scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
           readinessProbe:
+            failureThreshold: 3
             httpGet:
               path: /healthz
               port: 8080
+              scheme: HTTP
             initialDelaySeconds: 3
             periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
