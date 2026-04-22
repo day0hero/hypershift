@@ -22,7 +22,8 @@ spec:
         app.kubernetes.io/component: gateway
     spec:
       serviceAccountName: xrd-gateway
-      automountServiceAccountToken: false
+      # openshift oauth-proxy reads /var/run/secrets/kubernetes.io/serviceaccount/token for OpenShift OAuth.
+      automountServiceAccountToken: true
       securityContext:
         runAsNonRoot: true
         seccompProfile:

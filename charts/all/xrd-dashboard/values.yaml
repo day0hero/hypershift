@@ -6,8 +6,9 @@ xrdDashboard:
   replicaCount: 2
   # When true, all dashboard Deployments scale to 0 so Argo can be Healthy/Synced before images exist.
   workloadsSuspended: false
-  # oauth-proxy cookie signing secret — must be stable across Argo syncs (override in prod).
-  oauthSessionSecret: "dev-only-replace-with-openssl-rand-base64-32-in-values-overrides"
+  # oauth-proxy cookie signing secret (must be stable across Argo syncs). Must base64-decode to
+  # 16, 24, or 32 bytes when using --pass-access-token=true. Override in private values for prod.
+  oauthSessionSecret: "MbCUI5mMbMoAMGbuew8QHIdAW8BsMyhk"
   # Namespaces where xrd-watch has list/watch via RoleBinding (must exist on the cluster).
   watchNamespaces: []
   hpa:

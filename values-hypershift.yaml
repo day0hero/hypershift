@@ -107,8 +107,7 @@ letsencrypt:
   # server: https://acme-staging-v02.api.letsencrypt.org/directory
    email: team-vp@ragtagrobot.com
 
-# XRD dashboard (charts/all/xrd-dashboard): use a unique cookie secret in production.
-# xrdDashboard:
-#   oauthSessionSecret: "<output of: openssl rand -base64 32>"
-# Scale workloads to 0 until internal-registry images exist (Argo Healthy/Synced without pulls):
-#   workloadsSuspended: true
+# XRD dashboard (charts/all/xrd-dashboard): push gateway/frontend/query/watch to the internal
+# registry (see Chart.yaml / openshift_dashboard pipeline), then set workloadsSuspended: false.
+xrdDashboard:
+  workloadsSuspended: true
