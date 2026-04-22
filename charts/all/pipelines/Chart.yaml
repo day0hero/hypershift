@@ -1,7 +1,0 @@
-apiVersion: v2
-description: A Helm chart that deploys cluster provisioning pipelines
-keywords:
-  - pattern
-  - pipelines
-name: cluster-pipelines
-version: 0.0.4

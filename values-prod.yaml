@@ -125,8 +125,8 @@ clusterGroup:
       namespace: openshift-pipelines
       argoProject: pipelines
       path: charts/all/pipelines
-      #chart: cluster-pipelines
-      #chartVersion: 0.0.*
+      chart: cluster-pipelines
+      chartVersion: 0.0.*
       annotations:
         argocd.argoproj.io/sync-wave: "18"
 
