@@ -1,0 +1,27 @@
+{{- if and .Values.xrdDashboardBuild.enabled .Values.xrdDashboardBuild.samplePipelineRun }}
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: build-xrd-dashboard-images-
+  namespace: {{ .Values.pipelineNamespace }}
+  labels:
+    {{- include "pipelines.labels" . | nindent 4 }}
+spec:
+  pipelineRef:
+    name: build-xrd-dashboard-images
+  serviceAccountName: {{ .Values.serviceAccount.name }}
+  params:
+    - name: git-url
+      value: {{ required "xrdDashboardBuild.sampleGitUrl is required when samplePipelineRun is true" .Values.xrdDashboardBuild.sampleGitUrl | quote }}
+    - name: git-revision
+      value: {{ .Values.xrdDashboardBuild.gitRevision | quote }}
+  workspaces:
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: {{ .Values.xrdDashboardBuild.sampleWorkspaceStorage | quote }}
+{{- end }}

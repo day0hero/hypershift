@@ -1,0 +1,81 @@
+{{- if .Values.xrdDashboardBuild.enabled }}
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: xrd-dashboard-buildah-push
+  namespace: {{ .Values.pipelineNamespace }}
+  labels:
+    {{- include "pipelines.labels" . | nindent 4 }}
+spec:
+  description: Build a container image with buildah and push to the integrated registry.
+  params:
+    - name: internal-registry
+      type: string
+      description: Registry host:port (no path).
+      default: {{ .Values.xrdDashboardBuild.internalRegistry | quote }}
+    - name: target-namespace
+      type: string
+      default: {{ .Values.xrdDashboardBuild.targetNamespace | quote }}
+    - name: image-name
+      type: string
+      description: ImageStream / repository name (e.g. gateway).
+    - name: image-tag
+      type: string
+      default: {{ .Values.xrdDashboardBuild.imageTag | quote }}
+    - name: context-subdir
+      type: string
+      description: Directory under source/ containing the Container build context.
+    - name: dockerfile
+      type: string
+      description: Dockerfile path relative to the context directory.
+      default: Dockerfile
+  workspaces:
+    - name: source
+  volumes:
+    - name: containers-storage
+      emptyDir: {}
+  steps:
+    - name: build-and-push
+      image: {{ .Values.xrdDashboardBuild.buildahImage | quote }}
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - name: containers-storage
+          mountPath: /var/lib/containers
+      env:
+        - name: STORAGE_DRIVER
+          value: vfs
+      script: |
+        #!/bin/bash
+        set -euo pipefail
+        REG="$(params.internal-registry)"
+        NS="$(params.target-namespace)"
+        NAME="$(params.image-name)"
+        TAG="$(params.image-tag)"
+        CTX="$(params.context-subdir)"
+        DF="$(params.dockerfile)"
+        SRC="$(workspaces.source.path)/source"
+        FULL_IMAGE="${REG}/${NS}/${NAME}:${TAG}"
+
+        if [ ! -d "${SRC}" ]; then
+          echo "ERROR: expected clone at ${SRC}"
+          exit 1
+        fi
+        if [ ! -d "${SRC}/${CTX}" ]; then
+          echo "ERROR: context directory missing: ${SRC}/${CTX}"
+          exit 1
+        fi
+        if [ ! -f "${SRC}/${CTX}/${DF}" ]; then
+          echo "ERROR: Dockerfile missing: ${SRC}/${CTX}/${DF}"
+          exit 1
+        fi
+
+        TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+        buildah login --tls-verify=false -u openshift -p "${TOKEN}" "${REG}"
+
+        cd "${SRC}"
+        buildah bud --storage-driver=vfs --format=docker --layers \
+          -f "${CTX}/${DF}" -t "${FULL_IMAGE}" "${CTX}"
+        buildah push --storage-driver=vfs --tls-verify=false --format=docker "${FULL_IMAGE}"
+        echo "Pushed ${FULL_IMAGE}"
+{{- end }}

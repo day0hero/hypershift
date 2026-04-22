@@ -41,3 +41,33 @@ hypershift:
 hive:
   defaultControlPlaneReplicas: "3"
   defaultWorkerReplicas: "3"
+
+# Build and push xrd-dashboard images (gateway, frontend, query, watch) to the internal registry.
+xrdDashboardBuild:
+  enabled: true
+  # Namespace where ImageStreams are created and images are pushed (must match xrd-dashboard chart).
+  targetNamespace: xrd-dashboard
+  # Git repository containing Dockerfiles (override in PipelineRun or pattern values).
+  gitUrl: ""
+  gitRevision: main
+  # Internal registry hostname (in-cluster pull path used by Deployments).
+  internalRegistry: image-registry.openshift-image-registry.svc:5000
+  imageTag: latest
+  # Paths are relative to repository root after git clone.
+  gatewayContext: gateway
+  gatewayDockerfile: Dockerfile
+  frontendContext: frontend
+  frontendDockerfile: Dockerfile
+  queryContext: query
+  queryDockerfile: Dockerfile
+  watchContext: watch
+  watchDockerfile: Dockerfile
+  # UBI image with git for clone step.
+  gitBuilderImage: registry.redhat.io/ubi9/ubi:latest
+  # Buildah image for bud/push (requires privileged step on many clusters).
+  buildahImage: registry.redhat.io/ubi9/buildah:latest
+  # When true, creates a PipelineRun on each sync (usually leave false; start runs from the console/CLI).
+  samplePipelineRun: false
+  # Required if samplePipelineRun is true — repository with gateway/, frontend/, query/, watch/ Dockerfiles.
+  sampleGitUrl: ""
+  sampleWorkspaceStorage: 5Gi

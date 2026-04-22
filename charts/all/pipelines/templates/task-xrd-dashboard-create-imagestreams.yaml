@@ -1,0 +1,30 @@
+{{- if .Values.xrdDashboardBuild.enabled }}
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: xrd-dashboard-create-imagestreams
+  namespace: {{ .Values.pipelineNamespace }}
+  labels:
+    {{- include "pipelines.labels" . | nindent 4 }}
+spec:
+  description: Ensure ImageStreams exist in the target namespace for build output.
+  params:
+    - name: target-namespace
+      type: string
+      default: {{ .Values.xrdDashboardBuild.targetNamespace | quote }}
+  steps:
+    - name: create-if-missing
+      image: {{ .Values.toolsImage | quote }}
+      script: |
+        #!/bin/bash
+        set -euo pipefail
+        NS="$(params.target-namespace)"
+        for name in gateway frontend query watch; do
+          if oc get imagestream "${name}" -n "${NS}" &>/dev/null; then
+            echo "ImageStream ${name} already exists in ${NS}"
+          else
+            echo "Creating ImageStream ${name} in ${NS}"
+            oc create imagestream "${name}" -n "${NS}"
+          fi
+        done
+{{- end }}

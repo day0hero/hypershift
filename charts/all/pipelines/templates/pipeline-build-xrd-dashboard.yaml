@@ -1,0 +1,167 @@
+{{- if .Values.xrdDashboardBuild.enabled }}
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: build-xrd-dashboard-images
+  namespace: {{ .Values.pipelineNamespace }}
+  labels:
+    {{- include "pipelines.labels" . | nindent 4 }}
+spec:
+  description: >-
+    Clone the dashboard source repo, ensure ImageStreams in the target namespace,
+    then build and push gateway, frontend, query, and watch to the integrated registry.
+    Run with serviceAccountName {{ .Values.serviceAccount.name }} and a PVC-backed workspace
+    named "source" (RWO is fine; builds run serially).
+  params:
+    - name: git-url
+      type: string
+      default: {{ .Values.xrdDashboardBuild.gitUrl | quote }}
+    - name: git-revision
+      type: string
+      default: {{ .Values.xrdDashboardBuild.gitRevision | quote }}
+    - name: target-namespace
+      type: string
+      default: {{ .Values.xrdDashboardBuild.targetNamespace | quote }}
+    - name: internal-registry
+      type: string
+      default: {{ .Values.xrdDashboardBuild.internalRegistry | quote }}
+    - name: image-tag
+      type: string
+      default: {{ .Values.xrdDashboardBuild.imageTag | quote }}
+    - name: gateway-context
+      type: string
+      default: {{ .Values.xrdDashboardBuild.gatewayContext | quote }}
+    - name: gateway-dockerfile
+      type: string
+      default: {{ .Values.xrdDashboardBuild.gatewayDockerfile | quote }}
+    - name: frontend-context
+      type: string
+      default: {{ .Values.xrdDashboardBuild.frontendContext | quote }}
+    - name: frontend-dockerfile
+      type: string
+      default: {{ .Values.xrdDashboardBuild.frontendDockerfile | quote }}
+    - name: query-context
+      type: string
+      default: {{ .Values.xrdDashboardBuild.queryContext | quote }}
+    - name: query-dockerfile
+      type: string
+      default: {{ .Values.xrdDashboardBuild.queryDockerfile | quote }}
+    - name: watch-context
+      type: string
+      default: {{ .Values.xrdDashboardBuild.watchContext | quote }}
+    - name: watch-dockerfile
+      type: string
+      default: {{ .Values.xrdDashboardBuild.watchDockerfile | quote }}
+  workspaces:
+    - name: source
+      description: PVC or volume for git clone and build context (shared across tasks).
+  tasks:
+    - name: git-clone
+      taskRef:
+        name: xrd-dashboard-git-clone
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+
+    - name: create-imagestreams
+      runAfter:
+        - git-clone
+      taskRef:
+        name: xrd-dashboard-create-imagestreams
+      params:
+        - name: target-namespace
+          value: $(params.target-namespace)
+
+    - name: build-gateway
+      runAfter:
+        - create-imagestreams
+      taskRef:
+        name: xrd-dashboard-buildah-push
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: internal-registry
+          value: $(params.internal-registry)
+        - name: target-namespace
+          value: $(params.target-namespace)
+        - name: image-name
+          value: gateway
+        - name: image-tag
+          value: $(params.image-tag)
+        - name: context-subdir
+          value: $(params.gateway-context)
+        - name: dockerfile
+          value: $(params.gateway-dockerfile)
+
+    - name: build-frontend
+      runAfter:
+        - build-gateway
+      taskRef:
+        name: xrd-dashboard-buildah-push
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: internal-registry
+          value: $(params.internal-registry)
+        - name: target-namespace
+          value: $(params.target-namespace)
+        - name: image-name
+          value: frontend
+        - name: image-tag
+          value: $(params.image-tag)
+        - name: context-subdir
+          value: $(params.frontend-context)
+        - name: dockerfile
+          value: $(params.frontend-dockerfile)
+
+    - name: build-query
+      runAfter:
+        - build-frontend
+      taskRef:
+        name: xrd-dashboard-buildah-push
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: internal-registry
+          value: $(params.internal-registry)
+        - name: target-namespace
+          value: $(params.target-namespace)
+        - name: image-name
+          value: query
+        - name: image-tag
+          value: $(params.image-tag)
+        - name: context-subdir
+          value: $(params.query-context)
+        - name: dockerfile
+          value: $(params.query-dockerfile)
+
+    - name: build-watch
+      runAfter:
+        - build-query
+      taskRef:
+        name: xrd-dashboard-buildah-push
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: internal-registry
+          value: $(params.internal-registry)
+        - name: target-namespace
+          value: $(params.target-namespace)
+        - name: image-name
+          value: watch
+        - name: image-tag
+          value: $(params.image-tag)
+        - name: context-subdir
+          value: $(params.watch-context)
+        - name: dockerfile
+          value: $(params.watch-dockerfile)
+{{- end }}

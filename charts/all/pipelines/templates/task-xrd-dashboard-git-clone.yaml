@@ -1,0 +1,40 @@
+{{- if .Values.xrdDashboardBuild.enabled }}
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: xrd-dashboard-git-clone
+  namespace: {{ .Values.pipelineNamespace }}
+  labels:
+    {{- include "pipelines.labels" . | nindent 4 }}
+spec:
+  description: Clone the xrd-dashboard source repository into the shared workspace.
+  params:
+    - name: url
+      type: string
+      description: Git repository URL (https or ssh).
+    - name: revision
+      type: string
+      description: Branch, tag, or commit to checkout.
+      default: {{ .Values.xrdDashboardBuild.gitRevision | quote }}
+  workspaces:
+    - name: source
+      description: Repository is cloned to workspace path `source`.
+  steps:
+    - name: clone
+      image: {{ .Values.xrdDashboardBuild.gitBuilderImage | quote }}
+      script: |
+        #!/bin/bash
+        set -euo pipefail
+        URL="$(params.url)"
+        REV="$(params.revision)"
+        if [ -z "${URL}" ]; then
+          echo "ERROR: param url is empty. Set xrdDashboardBuild.gitUrl in values or pass git-url on the PipelineRun."
+          exit 1
+        fi
+        DEST="$(workspaces.source.path)/source"
+        rm -rf "${DEST}"
+        mkdir -p "${DEST}"
+        dnf install -y --nodocs git-core >/dev/null
+        git clone --branch "${REV}" --single-branch --depth 1 "${URL}" "${DEST}"
+        echo "Cloned ${URL} @ ${REV} into ${DEST}"
+{{- end }}
