@@ -17,6 +17,7 @@ clusterGroup:
       targetNamespaces: []
     external-secrets:
     openshift-pipelines:
+    openshift-gitops:
     cluster-provisioning:
     # When listed (and not disabled), charts/all/pipelines enables create-klusterlet-addon alongside acm app below.
     # open-cluster-management:
@@ -129,6 +130,24 @@ clusterGroup:
       chartVersion: 0.0.*
       annotations:
         argocd.argoproj.io/sync-wave: "18"
+
+    pipeline-tekton-rbac:
+      disabled: false
+      name: pipeline-tekton-rbac
+      namespace: openshift-pipelines
+      argoProject: pipelines
+      path: charts/all/pipelines-rbac
+      annotations:
+        argocd.argoproj.io/sync-wave: "19"
+
+    argocd-application-rbac:
+      disabled: false
+      name: argocd-application-rbac
+      namespace: openshift-gitops
+      argoProject: hub
+      path: charts/all/argocd-application-rbac
+      annotations:
+        argocd.argoproj.io/sync-wave: "17"
 
     # Uncomment when ACM is installed — pipelines chart detects this key and enables Klusterlet add-on task.
     # acm:

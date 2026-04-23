@@ -83,3 +83,25 @@ rbac:
 # Provide a list of users and/or groups to add to the clusterrolebinding
   users: []
   groups: []
+
+# Tekton / OpenShift Pipelines (charts/all/pipelines-rbac): ClusterRole plus optional
+# ClusterRoleBinding for OpenShift Users and Groups (for example names produced by
+# GitHub Group Sync). Grants full lifecycle on Pipelines CRDs in every namespace.
+pipelinesRbac:
+  create: true
+  clusterRoleName: openshift-pipelines-tekton-admin
+  clusterRoleBindingName: openshift-pipelines-tekton-admin
+  includePodLogAccess: true
+  users: []
+  groups: []
+
+# Argo CD / OpenShift GitOps Application CRs (charts/all/argocd-application-rbac).
+# Grants Kubernetes API access to applications, applicationsets, and appprojects.
+# For the Argo CD web UI, also configure policy.csv in argocd-rbac-cm for the same groups.
+argocdApplicationRbac:
+  create: true
+  clusterRoleName: openshift-gitops-application-manager
+  clusterRoleBindingName: openshift-gitops-application-manager
+  includeArgoCdOperatorCr: false
+  users: []
+  groups: []
