@@ -5,16 +5,17 @@ global:
     createBucket: true
     oidc:
 # OIDC bucket information: provide region and bucketName
-      region: "s3-bucket-region"
-      bucketName: "s3-bucket-name"
+      region: "us-east-2"
+      bucketName: "vp-hcp-demo-state"
 
 # GitHub organization(s) — shared by oauth and group-sync
   github:
     orgs:
-    - name: 'gh-org-name'
+    - name: 'validatedpatterns'
       # Teams: Group Sync uses them for OpenShift groups. OAuth uses org/team slugs
       # for login when this list is non-empty; otherwise OAuth allows the whole org.
-      teams: []
+      teams: 
+        - Engineering
 
 # register a GitHub oAuth application: https://github.com/settings/applications/new
 # configure oauth provider: https://docs.openshift.com/container-platform/4.15/authentication/understanding-identity-provider.html
@@ -24,7 +25,7 @@ global:
     type: GitHub
     secretName: ocp-github-oauth
     github:
-      clientID: 'gh-oauth-client-id'
+      clientID: 'Ov23lipPlD25Gw2ifrex'
 
 # Group Sync Operator — syncs GitHub teams to OpenShift groups.
 # Vault secret githubGroupSync: `appId` = GitHub App ID (settings/apps → About), not installation ID;
@@ -93,7 +94,8 @@ pipelinesRbac:
   clusterRoleBindingName: openshift-pipelines-tekton-admin
   includePodLogAccess: true
   users: []
-  groups: []
+  groups: 
+    - Engineering
 
 # Argo CD / OpenShift GitOps Application CRs (charts/all/argocd-application-rbac).
 # Grants Kubernetes API access to applications, applicationsets, and appprojects.
@@ -104,4 +106,5 @@ argocdApplicationRbac:
   clusterRoleBindingName: openshift-gitops-application-manager
   includeArgoCdOperatorCr: false
   users: []
-  groups: []
+  groups:
+    - Engineering
